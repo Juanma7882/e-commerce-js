@@ -3,7 +3,9 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
+./front-ecomerce/node_modules/
+./front-ecomerce/package-lock.json
+./front-ecomerce/yarn.lock
 # Production builds
 dist/
 build/
