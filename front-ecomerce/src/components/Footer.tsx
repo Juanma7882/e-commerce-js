@@ -18,14 +18,14 @@ export default function Footer() {
                             <a href="#" aria-label="Seguinos en Facebook" className="transition-all duration-300 hover:opacity-80 hover:-translate-y-1">
                                 <img
                                     className="h-8 w-8 object-contain"
-                                    src="/Gmail.svg"  // ⚠️ Cambié el nombre porque tenías Gmail_Logo.svg
+                                    src="/Gmail.svg"
                                     alt="Logo de Facebook - Síguenos"
                                 />
                             </a>
                             <a href="#" aria-label="Contáctanos por WhatsApp" className="transition-all duration-300 hover:opacity-80 hover:-translate-y-1">
                                 <img
                                     className="h-8 w-8 object-contain"
-                                    src="/whatsapp.svg"  // ⚠️ Corregí el nombre (washap.svg → whatsapp.svg)
+                                    src="/whatsapp.svg"
                                     alt="Logo de WhatsApp - Escríbenos"
                                 />
                             </a>
