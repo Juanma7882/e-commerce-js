@@ -91,7 +91,7 @@ export default function Footer() {
                                 <input
                                     type="email"
                                     id="emailInput"
-                                    placeholder="tuemail@ejemplo.com"
+                                    placeholder="ejemploemail@ejemplo.com"
                                     required
                                     className="flex-1 px-4 py-3 border-2 border-gray-600 rounded-md bg-[#333] text-white transition-colors duration-300 focus:outline-none focus:border-green-500"
                                 />
