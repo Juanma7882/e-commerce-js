@@ -1,0 +1,44 @@
+{
+    "id": "p004",
+    "name": "Remera Blanca Mujer",
+    "type": "ropa",
+    "tags": [
+        "remera",
+        "mujer",
+        "casual"
+    ],
+    "prices_by_size": {
+        "S": 14999,
+        "M": 15999,
+        "L": 16999,
+        "XL": 17999
+    },
+    "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+    ],
+    "stock": {
+        "S": 10,
+        "M": 15,
+        "L": 8,
+        "XL": 5
+    },
+    "discount": {
+        "active": true,
+        "percentage": 20,
+        "valid_until": "2026-02-15",
+        "message": "20% OFF por tiempo limitado"
+    },
+    "images": [
+        "remeraBlanca1.webp",
+        "remeraBlanca2.webp"
+    ],
+    "promo_banner": {
+        "active": true,
+        "text": "🔥 20% OFF hasta el 15 de Febrero",
+        "valid_until": "2026-02-15",
+        "style": "warning"
+    }
+}

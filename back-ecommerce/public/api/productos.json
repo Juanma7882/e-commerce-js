@@ -1,0 +1,44 @@
+[
+    {
+        "id": "p001",
+        "name": "Cartera Mujer Blanca",
+        "price_from": 18999,
+        "images": [
+            "carteraMujerBlanca1.webp",
+            "carteraMujerBlanca2.webp"
+        ]
+    },
+    {
+        "id": "p002",
+        "name": "Campera Jean Negra",
+        "price_from": 45999,
+        "images": [
+            "camperaJeanNegra.webp"
+        ]
+    },
+    {
+        "id": "p003",
+        "name": "Buzo Oversize Negro",
+        "price_from": 32999,
+        "images": [
+            "buzo.webp"
+        ]
+    },
+    {
+        "id": "p004",
+        "name": "Remera Blanca Mujer",
+        "price_from": 14999,
+        "images": [
+            "remeraBlanca1.webp",
+            "remeraBlanca2.webp"
+        ]
+    },
+    {
+        "id": "p005",
+        "name": "Peluche Ganso Blanco",
+        "price_from": 21999,
+        "images": [
+            "ganso.webp"
+        ]
+    }
+]

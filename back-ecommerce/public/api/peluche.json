@@ -1,0 +1,38 @@
+{
+    "id": "p005",
+    "name": "Peluche Ganso Blanco",
+    "type": "peluche",
+    "tags": [
+        "peluche",
+        "decoracion",
+        "regalo"
+    ],
+    "prices_by_size": {
+        "30cm": 21999,
+        "50cm": 28999,
+        "80cm": 37999
+    },
+    "sizes": [
+        "30cm",
+        "50cm",
+        "80cm"
+    ],
+    "stock": {
+        "30cm": 12,
+        "50cm": 6,
+        "80cm": 3
+    },
+    "discount": {
+        "active": false
+    },
+    "images": [
+        "ganso.webp",
+        "gansoRosa.webp"
+    ],
+    "promo_banner": {
+        "active": true,
+        "text": "🔥 20% OFF hasta el 15 de Febrero",
+        "valid_until": "2026-02-15",
+        "style": "warning"
+    }
+}

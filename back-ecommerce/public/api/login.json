@@ -1,0 +1,8 @@
+{
+    "status": "success",
+    "data": {
+        "userId": "12345",
+        "token": "abcdef1234567890",
+        "expiresIn": 3600
+    }
+}
