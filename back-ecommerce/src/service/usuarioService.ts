@@ -1,9 +1,11 @@
 import Usuario from "../models/usuario";
+import { generarAccessToken, generarRefreshToken } from "../utils/jwt";
+import { hashPassword, comparePassword } from "../utils/password";
+
 import { CrearUsuarioDTO } from "../dto/usuario/crear-usuario.dto";
 import { LoginUsuarioDTO } from "../dto/usuario/login-usuario.dto";
 import { UsuarioResponseDTO } from "../dto/usuario/usuario-response.dto";
-import { hashPassword, comparePassword } from "../utils/password";
-import { generarToken } from "../utils/jwt";
+import { LoginResponseDTO } from "../dto/usuario/login-response.dto"
 
 class UsuarioService {
 
@@ -46,10 +48,12 @@ class UsuarioService {
         }
     }
 
-
-    async login(
-        data: LoginUsuarioDTO
-    ): Promise<{ token: string }> {
+    /**
+     * 
+     * @param data 
+     * @returns 
+     */
+    async login(data: LoginUsuarioDTO): Promise<LoginResponseDTO> {
 
         const usuario = await Usuario.findOne({
             where: { email: data.email }
@@ -68,12 +72,26 @@ class UsuarioService {
             throw new Error("Credenciales inválidas");
         }
 
-        const token = generarToken({
+        //! agregar el rol del usuario al payload del token admin y user
+        const accessToken = generarAccessToken({
             id: usuario.id,
             email: usuario.email,
         });
 
-        return { token };
+        const refreshToken = generarRefreshToken({
+            id: usuario.id,
+            email: usuario.email,
+        });
+
+        return {
+            user: {
+                id: usuario.id,
+                nombre: usuario.nombre,
+                email: usuario.email
+            },
+            accessToken,
+            refreshToken,
+        };
     }
 }
 

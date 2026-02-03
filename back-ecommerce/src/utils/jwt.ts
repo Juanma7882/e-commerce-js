@@ -1,12 +1,29 @@
 import jwt from "jsonwebtoken";
+import { AccessTokenPayload, RefreshTokenPayload } from "../types/jwt";
 
-export const generarToken = (payload: {
-    sub: number;
-    email: string;
-    type: "access" | "refresh";
-}) => {
-    return jwt.sign(payload, process.env.JWT_SECRET!, {
-        expiresIn: "1h",
-        issuer: "ecommerce-api",
-    });
-};
+const JWT_SECRET = process.env.JWT_SECRET!;
+const ACCESS_EXPIRES = "15m";
+const REFRESH_EXPIRES = "7d";
+
+if (!JWT_SECRET || !ACCESS_EXPIRES || !REFRESH_EXPIRES) {
+    throw new Error("JWT environment variables are not set");
+}
+
+
+export const generarAccessToken = (
+    payload: Omit<AccessTokenPayload, "type">
+) =>
+    jwt.sign(
+        { ...payload, type: "access" },
+        JWT_SECRET,
+        { expiresIn: ACCESS_EXPIRES }
+    );
+
+export const generarRefreshToken = (
+    payload: Omit<RefreshTokenPayload, "type">
+) =>
+    jwt.sign(
+        { ...payload, type: "refresh" },
+        JWT_SECRET,
+        { expiresIn: REFRESH_EXPIRES }
+    );

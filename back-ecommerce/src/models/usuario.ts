@@ -17,7 +17,7 @@ interface UsuarioAttributes {
     token_valid_after: Date;
 }
 
-type UsuarioCreationAttributes = Optional<UsuarioAttributes, "id">;
+type UsuarioCreationAttributes = Optional<UsuarioAttributes, "id" | "createdAt" | "updatedAt" | "token_valid_after">;
 
 class Usuario extends Model<UsuarioAttributes, UsuarioCreationAttributes>
     implements UsuarioAttributes {

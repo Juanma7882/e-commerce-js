@@ -1,10 +1,12 @@
 import "./config/env"
-import app from "./app"
-import { AppConfig } from "./config/app.config"
 
-// hay que generar una key segura
+import app from "./app"
+import AppConfig from "./config/app.config"
+
+//! hay que generar una key segura
 // node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
+
 app.listen(AppConfig.port, () => {
-    console.log("estamos corriendo")
+    console.log("estamos corriendo en el puerto", AppConfig.port);
 })
