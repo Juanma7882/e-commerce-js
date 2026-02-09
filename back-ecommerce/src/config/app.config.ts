@@ -7,9 +7,8 @@ dotenv.config();
 dotenvConfig({ path: resolve(process.cwd(), ".env") });
 
 
-
 const AppConfig = {
-    port: Number(process.env.APP_PORT),
+    port: Number(process.env.PORT),
     env: process.env.NODE_ENV
 }
 export default AppConfig;

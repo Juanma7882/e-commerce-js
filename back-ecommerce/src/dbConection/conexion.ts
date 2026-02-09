@@ -1,13 +1,14 @@
 import { Sequelize } from "sequelize";
-import { DbConfig } from "../config/db.config";
+import { AppConfig } from "../config/db.config";
+
 
 export const sequelize = new Sequelize(
-    DbConfig.databaseName,
-    DbConfig.userName,
-    DbConfig.password,
+    AppConfig.db.databaseName,
+    AppConfig.db.userName,
+    AppConfig.db.password,
     {
-        host: DbConfig.host,
-        port: DbConfig.port,
+        host: AppConfig.db.host,
+        port: AppConfig.db.port,
         dialect: "postgres",
         logging: false,// activar logs de consultas osea mostrar en consola las consultas SQL que se ejecutan
     });

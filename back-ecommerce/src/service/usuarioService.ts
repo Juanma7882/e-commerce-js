@@ -1,18 +1,16 @@
 import Usuario from "../models/usuario";
-import { generarAccessToken, generarRefreshToken } from "../utils/jwt";
-import { hashPassword, comparePassword } from "../utils/password";
-
+import { hashPassword } from "../utils/password";
 import { CrearUsuarioDTO } from "../dto/usuario/crear-usuario.dto";
-import { LoginUsuarioDTO } from "../dto/usuario/login-usuario.dto";
 import { UsuarioResponseDTO } from "../dto/usuario/usuario-response.dto";
-import { LoginResponseDTO } from "../dto/usuario/login-response.dto"
+import { ObtenerUsuarioPorDTO } from "../dto/usuario/obtener-usuario.dto";
+import { ObtenerListaUsuariosDTO } from "../dto/usuario/obtener-lista-usuarios.dto";
+import { ListarUsuariosDTO } from "../dto/usuario/listar-usuarios.dto";
+import { ActualizarUsuarioDTO } from "../dto/usuario/actualizar-usuario.dto"
 
 class UsuarioService {
-
     async crearUsuarioDTO(data: CrearUsuarioDTO): Promise<UsuarioResponseDTO> {
 
         try {
-
             const usuarioExistente = await Usuario.findOne({
                 where: { email: data.email }
             });
@@ -48,51 +46,137 @@ class UsuarioService {
         }
     }
 
-    /**
-     * 
-     * @param data 
-     * @returns 
-     */
-    async login(data: LoginUsuarioDTO): Promise<LoginResponseDTO> {
+    async ObtenerUsuarioPor(filtro: ObtenerUsuarioPorDTO): Promise<{ mensaje: string, usuario: UsuarioResponseDTO }> {
+        try {
+            if (!filtro.id && !filtro.email) {
+                throw new Error("Debe proporcionar id o email");
+            }
 
-        const usuario = await Usuario.findOne({
-            where: { email: data.email }
-        });
 
-        if (!usuario) {
-            throw new Error("Credenciales inválidas");
+            const usuario = await Usuario.findOne({
+                where: {
+                    ...(filtro.id && { id: filtro.id }),
+                    ...(filtro.email && { email: filtro.email }),
+                },
+            });
+
+            if (!usuario) {
+                throw new Error("usuario no encontrado");
+            }
+
+            return {
+                mensaje: "usuario encontrado",
+                usuario: {
+                    id: usuario.id,
+                    nombre: usuario.nombre,
+                    apellido: usuario.apellido,
+                    email: usuario.email,
+                }
+
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error("Error al crear el usuario: " + message);
         }
+    }
 
-        const passwordOk = await comparePassword(
-            data.password,
-            usuario.password
-        );
+    async listarUsuarios(filtros: ObtenerListaUsuariosDTO): Promise<ListarUsuariosDTO> {
 
-        if (!passwordOk) {
-            throw new Error("Credenciales inválidas");
+        try {
+            const pagina = filtros.pagina ?? 1;
+            const limit = filtros.limit ?? 10;
+            const offset = (pagina - 1) * limit;
+
+            const where: { email?: string; nombre?: string } = {
+                ...(filtros.email && { email: filtros.email }),
+                ...(filtros.nombre && { nombre: filtros.nombre }),
+            };
+
+            const { rows, count } = await Usuario.findAndCountAll({
+                where,
+                limit,
+                offset,
+                order: [["createdAt", "DESC"]],
+            });
+
+            return {
+                total: count,
+                pagina,
+                limit,
+                usuarios: rows.map(usuario => ({
+                    id: usuario.id,
+                    nombre: usuario.nombre,
+                    apellido: usuario.apellido,
+                    email: usuario.email,
+                })),
+            };
+
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error("Error al listar usuarios: " + message);
         }
+    }
 
-        //! agregar el rol del usuario al payload del token admin y user
-        const accessToken = generarAccessToken({
-            id: usuario.id,
-            email: usuario.email,
-        });
+    async actualizarUsuario(data: ActualizarUsuarioDTO): Promise<UsuarioResponseDTO> {
+        try {
+            const usuario = await Usuario.findByPk(data.id);
 
-        const refreshToken = generarRefreshToken({
-            id: usuario.id,
-            email: usuario.email,
-        });
+            if (!usuario) {
+                throw new Error("Usuario no encontrado");
+            }
 
-        return {
-            user: {
+            await usuario.update({
+                nombre: data.nombre ?? usuario.nombre,
+                apellido: data.apellido ?? usuario.apellido,
+                telefono: data.telefono ?? usuario.telefono,
+                provincia: data.provincia ?? usuario.provincia,
+                localidad: data.localidad ?? usuario.localidad,
+                codigo_postal: data.codigo_postal ?? usuario.codigo_postal,
+                direccion: data.direccion ?? usuario.direccion,
+            });
+
+            return {
                 id: usuario.id,
                 nombre: usuario.nombre,
-                email: usuario.email
-            },
-            accessToken,
-            refreshToken,
-        };
+                apellido: usuario.apellido,
+                email: usuario.email,
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error("Error al actualizar el usuario: " + message);
+        }
     }
+
+    async eliminarUsuario(id: number): Promise<{ mensaje: string, usuario: UsuarioResponseDTO }> {
+        try {
+            if (!id) {
+                throw new Error("el ID tiene un valor null")
+            }
+
+            const usuario = await Usuario.findByPk(id)
+
+            if (!usuario) {
+                throw new Error("usuario no encontrado")
+            }
+
+            return {
+                mensaje: "usuario eliminado exitosamente",
+                usuario: {
+                    id: usuario.id,
+                    nombre: usuario.nombre,
+                    apellido: usuario.apellido,
+                    email: usuario.email,
+                }
+            }
+
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error("Error al crear el usuario: " + message);
+        }
+    }
+
+
+
 }
 
 export default UsuarioService;

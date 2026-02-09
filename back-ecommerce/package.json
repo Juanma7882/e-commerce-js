@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Backend para e-commerce de ropa y peluches",
   "main": "dist/server.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "dev": "node --watch --loader ts-node/esm src/server.ts",
+    "dev": "node --watch --import tsx src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts"
@@ -33,6 +33,7 @@
     "jiti": "^2.6.1",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.54.0"
   }

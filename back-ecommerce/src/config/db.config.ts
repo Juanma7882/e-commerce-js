@@ -1,10 +1,3 @@
-
-const getNumber = (value: string | undefined, fallback: number): number => {
-    const n = parseInt(value ?? "", 10);
-    return Number.isNaN(n) ? fallback : n;
-};
-
-
 export interface DbConfig {
     host: string;
     port: number;
@@ -19,6 +12,7 @@ export interface AppConfig {
     db: DbConfig;
 }
 
+
 const required = (value: string | undefined, name: string): string => {
     if (!value) {
         throw new Error(`Missing required env var: ${name}`);
@@ -26,18 +20,22 @@ const required = (value: string | undefined, name: string): string => {
     return value;
 }
 
+const getNumber = (value: string | undefined, fallback: number): number => {
+    const n = parseInt(value ?? "", 10);
+    return Number.isNaN(n) ? fallback : n;
+};
+
 
 
 
 export const AppConfig: AppConfig = {
-    port: getNumber(process.env.PGPORT),
+    port: getNumber(process.env.PORT, 3000),
     env: process.env.NODE_ENV,
     db: {
-
-        host: process.env.PGHOST,
-        port: Number(process.env.PGPORT),
-        userName: required(process.env.PGUSER),
-        password: required(process.env.PGPASSWORD),
-        databaseName: required(process.env.PGDATABASE),
+        host: required(process.env.PGHOST, "PGHOST"),
+        port: getNumber(process.env.PGPORT, 5432),
+        userName: required(process.env.PGUSER, "PGUSER"),
+        password: required(process.env.PGPASSWORD, "PGPASSWORD"),
+        databaseName: required(process.env.PGDATABASE, "PGDATABASE"),
     }
 }
