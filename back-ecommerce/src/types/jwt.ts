@@ -8,6 +8,7 @@ export interface BaseTokenPayload {
 
 export interface AccessTokenPayload extends BaseTokenPayload {
     type: "access";
+    rol: "USER" | "ADMIN";
 }
 
 export interface RefreshTokenPayload extends BaseTokenPayload {

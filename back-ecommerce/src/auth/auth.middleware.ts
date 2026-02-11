@@ -32,7 +32,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         if (
             decoded.iat &&
             decoded.iat * 1000 <
-            new Date(usuario.token_valid_after).getTime()
+            new Date(usuario.tokenValidAfter).getTime()
         ) {
             return res.status(401).json({ message: "Token invalidado" });
         }

@@ -27,15 +27,7 @@ class SubMenu extends Model<SubMenuAttributes, SubmenuCreationAttributes>
 
 SubMenu.init({
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    menuId: {
-        type: DataTypes.INTEGER, allowNull: false,
-        references: {
-            model: "menu",
-            key: "id",
-        },
-        onDelete: "CASCADE",
-    },
-
+    menuId: { type: DataTypes.INTEGER, allowNull: false },
     nombre: { type: DataTypes.STRING(50), allowNull: false },
     url: { type: DataTypes.STRING(100), allowNull: false },
     icono: { type: DataTypes.STRING(50), allowNull: false },

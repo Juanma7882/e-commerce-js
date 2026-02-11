@@ -6,6 +6,7 @@ import { RefreshTokenDTO } from "../dto/auth/refresh-token.dto";
 import { comparePassword } from "../utils/password";
 import { generarAccessToken, generarRefreshToken } from "../utils/jwt";
 import { RefreshTokenPayload } from "../types/jwt";
+import Rol from "../models/rol";
 
 class AuthService {
 
@@ -28,8 +29,17 @@ class AuthService {
      */
     async login(data: LoginUsuarioDTO): Promise<LoginResponseDTO> {
 
+        // const usuario = await Usuario.findOne({
+        //     where: { email: data.email },
+        // });
+
         const usuario = await Usuario.findOne({
-            where: { email: data.email }
+            where: { email: data.email },
+            include: [{
+                model: Rol,
+                as: 'rol', // ⚠️ Debe coincidir con el alias definido en la relación
+                attributes: ['id', 'nombre'] // Solo trae los campos que necesitas
+            }]
         });
 
         if (!usuario) {
@@ -45,9 +55,12 @@ class AuthService {
             throw new Error("Credenciales inválidas");
         }
 
+        const rolNombre = usuario.rol?.nombre
+        console.log("rolNombre", rolNombre)
         const accessToken = generarAccessToken({
             id: usuario.id,
             email: usuario.email,
+            rol: rolNombre
         });
 
         const refreshToken = generarRefreshToken({
@@ -100,12 +113,12 @@ class AuthService {
         if (
             decoded.iat &&
             decoded.iat * 1000 <
-            new Date(usuario.token_valid_after).getTime()
+            new Date(usuario.tokenValidAfter).getTime()
         ) {
             throw new Error("Refresh token invalidado");
         }
 
-        const accessToken = generarAccessToken({
+        const accessToken = generarRefreshToken({
             id: usuario.id,
             email: usuario.email,
         });

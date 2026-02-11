@@ -7,17 +7,15 @@ interface UsuarioAttributes {
     nombre: string;
     apellido: string;
     email: string;
+    dni: number;
     telefono: string;
     password: string;
-    provincia: string;
-    localidad: string;
-    codigo_postal: string;
-    direccion: string;
     activo: boolean;
-    token_valid_after: Date;
+    ultimoLogin: Date
+    tokenValidAfter: Date;
 }
 
-type UsuarioCreationAttributes = Optional<UsuarioAttributes, "id" | "token_valid_after">;
+type UsuarioCreationAttributes = Optional<UsuarioAttributes, "id" | "tokenValidAfter">;
 
 class Usuario extends Model<UsuarioAttributes, UsuarioCreationAttributes>
     implements UsuarioAttributes {
@@ -26,14 +24,13 @@ class Usuario extends Model<UsuarioAttributes, UsuarioCreationAttributes>
     public nombre!: string;
     public apellido!: string;
     public email!: string;
+    public dni!: number;
     public telefono!: string;
     public password!: string;
-    public provincia!: string;
-    public localidad!: string;
-    public codigo_postal!: string;
-    public direccion!: string;
     public activo!: boolean;
-    public token_valid_after!: Date;
+    public ultimoLogin!: Date;
+    public tokenValidAfter!: Date;
+
 }
 
 Usuario.init(
@@ -43,18 +40,16 @@ Usuario.init(
         nombre: { type: DataTypes.STRING, allowNull: false },
         apellido: { type: DataTypes.STRING, allowNull: false },
         email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
+        dni:{type:DataTypes.INTEGER,allowNull:false,unique:true},
         telefono: { type: DataTypes.STRING, allowNull: false, validate: { isNumeric: true } },
         password: { type: DataTypes.STRING, allowNull: false },
-        provincia: { type: DataTypes.STRING, allowNull: false },
-        localidad: { type: DataTypes.STRING, allowNull: false },
-        codigo_postal: { type: DataTypes.STRING, allowNull: false },
-        direccion: { type: DataTypes.STRING, allowNull: false },
         activo: { type: DataTypes.BOOLEAN, allowNull: false },
-        token_valid_after: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+        ultimoLogin: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+        tokenValidAfter: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     },
     {
         sequelize,
-        tableName: "usuarios",
+        tableName: "usuario",
         freezeTableName: true,
         timestamps: true,
     }

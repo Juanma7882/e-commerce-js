@@ -46,9 +46,3 @@ ValidacionExtra.hasMany(RolMenu, { foreignKey: "validacionExtraId" })
 
 RolSubMenu.belongsTo(ValidacionExtra, { foreignKey: "validacionExtraId" })
 ValidacionExtra.hasMany(RolSubMenu, { foreignKey: "validacionExtraId" })
-
-
-export {
-    Direccion,
-    Provincia
-}

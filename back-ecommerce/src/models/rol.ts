@@ -21,7 +21,7 @@ Rol.init({
     descripcion: { type: DataTypes.TEXT, allowNull: true }
 }, {
     sequelize,
-    tableName: "roles",
+    tableName: "rol",
     timestamps: true,
     freezeTableName: true
 })
