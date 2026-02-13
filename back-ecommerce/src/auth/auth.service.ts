@@ -5,8 +5,10 @@ import { LoginResponseDTO } from "../dto/auth/login-response.dto";
 import { RefreshTokenDTO } from "../dto/auth/refresh-token.dto";
 import { comparePassword } from "../utils/password";
 import { generarAccessToken, generarRefreshToken } from "../utils/jwt";
-import { RefreshTokenPayload } from "../types/jwt";
+import { RefreshTokenPayload, validateRol } from "../types/jwt";
 import Rol from "../models/rol";
+import UnauthorizedError from "../custom-errors/http-errors/UnauthorizedError";
+import NotFountError from "../custom-errors/http-errors/NotFoundError";
 
 class AuthService {
 
@@ -29,21 +31,13 @@ class AuthService {
      */
     async login(data: LoginUsuarioDTO): Promise<LoginResponseDTO> {
 
-        // const usuario = await Usuario.findOne({
-        //     where: { email: data.email },
-        // });
-
         const usuario = await Usuario.findOne({
             where: { email: data.email },
-            include: [{
-                model: Rol,
-                as: 'rol', // ⚠️ Debe coincidir con el alias definido en la relación
-                attributes: ['id', 'nombre'] // Solo trae los campos que necesitas
-            }]
         });
 
         if (!usuario) {
-            throw new Error("Credenciales inválidas");
+            console.log("usuario", usuario)
+            throw new UnauthorizedError("Credenciales inválidas usuario o contraseña incorrecta incorrecta");
         }
 
         const passwordOk = await comparePassword(
@@ -51,16 +45,25 @@ class AuthService {
             usuario.password
         );
 
+
         if (!passwordOk) {
-            throw new Error("Credenciales inválidas");
+            console.log("passwordOk", passwordOk)
+            throw new UnauthorizedError("Credenciales inválidas usuario o contraseña incorrecta incorrecta");
         }
 
-        const rolNombre = usuario.rol?.nombre
-        console.log("rolNombre", rolNombre)
+
+        const rol = await Rol.findOne({
+            where: { id: usuario.rolId }
+        })
+
+        if (!rol) {
+            throw new NotFountError("Credenciales inválidas contraseña incorrecta");
+        }
+
         const accessToken = generarAccessToken({
             id: usuario.id,
             email: usuario.email,
-            rol: rolNombre
+            rol: validateRol(rol.nombre)
         });
 
         const refreshToken = generarRefreshToken({
@@ -101,12 +104,12 @@ class AuthService {
         ) as RefreshTokenPayload;
 
         if (decoded.type !== "refresh") {
-            throw new Error("Token inválido");
+            throw new UnauthorizedError("Token inválido");
         }
 
         const usuario = await Usuario.findByPk(decoded.id);
         if (!usuario) {
-            throw new Error("Usuario no existe");
+            throw new NotFountError("Usuario no existe");
         }
 
         //! 🛑 Invalidación global 🛑
@@ -115,7 +118,7 @@ class AuthService {
             decoded.iat * 1000 <
             new Date(usuario.tokenValidAfter).getTime()
         ) {
-            throw new Error("Refresh token invalidado");
+            throw new UnauthorizedError("Refresh token invalidado");
         }
 
         const accessToken = generarRefreshToken({
