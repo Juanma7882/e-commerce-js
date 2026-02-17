@@ -63,7 +63,7 @@ class AuthService {
         const accessToken = generarAccessToken({
             id: usuario.id,
             email: usuario.email,
-            rol: validateRol(rol.nombre)
+            rol: validateRol(rol.nombre),
         });
 
         const refreshToken = generarRefreshToken({
@@ -96,7 +96,7 @@ class AuthService {
      * @returns The `refresh` function returns a Promise that resolves to an object containing the
      * `accessToken` string.
      */
-    async refresh(data: RefreshTokenDTO): Promise<{ accessToken: string }> {
+    async refresh(data: RefreshTokenDTO): Promise<{ accessToken: string, refreshToken: string }> {
 
         const decoded = jwt.verify(
             data.refreshToken,
@@ -121,12 +121,30 @@ class AuthService {
             throw new UnauthorizedError("Refresh token invalidado");
         }
 
-        const accessToken = generarRefreshToken({
+        const rol = await Rol.findOne({
+            where: { id: usuario.rolId }
+        })
+
+        if (!rol) {
+            throw new NotFountError("Credenciales inválidas contraseña incorrecta");
+        }
+
+
+        const accessToken = generarAccessToken({
+            id: usuario.id,
+            email: usuario.email,
+            rol: validateRol(rol.nombre)
+        });
+
+        const refreshToken = generarRefreshToken({
             id: usuario.id,
             email: usuario.email,
         });
 
-        return { accessToken };
+        return {
+            accessToken,
+            refreshToken
+        };
     }
 }
 

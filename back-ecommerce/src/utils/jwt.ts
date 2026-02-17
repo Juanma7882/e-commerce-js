@@ -16,8 +16,8 @@ export const generarAccessToken = (
     jwt.sign(
         { ...payload, type: "access" },
         JWT_SECRET,
-        { expiresIn: ACCESS_EXPIRES },
-        
+        { expiresIn: ACCESS_EXPIRES, algorithm: "HS256" },
+
     );
 
 export const generarRefreshToken = (
@@ -26,5 +26,6 @@ export const generarRefreshToken = (
     jwt.sign(
         { ...payload, type: "refresh" },
         JWT_SECRET,
-        { expiresIn: REFRESH_EXPIRES }
+        { expiresIn: REFRESH_EXPIRES, algorithm: "HS256" }
     );
+
