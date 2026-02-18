@@ -3,8 +3,4 @@ export interface ActualizarUsuarioDTO {
     nombre?: string;
     apellido?: string;
     telefono?: string;
-    provincia?: string;
-    localidad?: string;
-    codigo_postal?: string;
-    direccion?: string;
 }

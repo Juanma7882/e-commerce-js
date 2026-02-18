@@ -6,10 +6,11 @@ import { ObtenerUsuarioPorDTO } from "../dto/usuario/obtener-usuario.dto";
 import { ObtenerListaUsuariosDTO } from "../dto/usuario/obtener-lista-usuarios.dto";
 import { ListarUsuariosDTO } from "../dto/usuario/listar-usuarios.dto";
 import { ActualizarUsuarioDTO } from "../dto/usuario/actualizar-usuario.dto"
+import Rol from "../models/rol";
+import { UsuarioResponseSimpleDTO } from "../dto/usuario/usuario-response-simple";
 
 class UsuarioService {
     async crearUsuarioDTO(data: CrearUsuarioDTO): Promise<UsuarioResponseDTO> {
-
         try {
             const usuarioExistente = await Usuario.findOne({
                 where: { email: data.email }
@@ -21,16 +22,19 @@ class UsuarioService {
 
             const passwordHasheada = await hashPassword(data.password);
 
+
             const usuario = await Usuario.create({
+                rolId: data.rolId,
                 nombre: data.nombre,
                 apellido: data.apellido,
                 email: data.email,
-                password: passwordHasheada,
+                dni: data.dni,
                 telefono: data.telefono,
-                provincia: data.provincia,
-                localidad: data.localidad,
-                codigo_postal: data.codigo_postal,
-                direccion: data.direccion,
+                password: passwordHasheada
+            });
+
+            await usuario.reload({
+                include: [{ model: Rol, attributes: ["nombre"] }]
             });
 
             return {
@@ -38,6 +42,7 @@ class UsuarioService {
                 nombre: usuario.nombre,
                 apellido: usuario.apellido,
                 email: usuario.email,
+                rol: usuario.Rol?.nombre ?? "unknown"
             };
         }
         catch (error) {
@@ -51,13 +56,17 @@ class UsuarioService {
             if (!filtro.id && !filtro.email) {
                 throw new Error("Debe proporcionar id o email");
             }
-
-
             const usuario = await Usuario.findOne({
                 where: {
                     ...(filtro.id && { id: filtro.id }),
                     ...(filtro.email && { email: filtro.email }),
                 },
+                include: [
+                    {
+                        model: Rol,
+                        attributes: ["id", "nombre", "descripcion"]
+                    }
+                ]
             });
 
             if (!usuario) {
@@ -71,6 +80,7 @@ class UsuarioService {
                     nombre: usuario.nombre,
                     apellido: usuario.apellido,
                     email: usuario.email,
+                    rol: usuario.Rol?.nombre ?? "unknown"
                 }
 
             }
@@ -92,8 +102,16 @@ class UsuarioService {
                 ...(filtros.nombre && { nombre: filtros.nombre }),
             };
 
+            const include = [
+                {
+                    model: Rol,
+                    attributes: ["id", "nombre", "descripcion"]
+                }
+            ]
+
             const { rows, count } = await Usuario.findAndCountAll({
                 where,
+                include,
                 limit,
                 offset,
                 order: [["createdAt", "DESC"]],
@@ -108,6 +126,7 @@ class UsuarioService {
                     nombre: usuario.nombre,
                     apellido: usuario.apellido,
                     email: usuario.email,
+                    rol: usuario.Rol?.nombre ?? "unknown"
                 })),
             };
 
@@ -117,7 +136,7 @@ class UsuarioService {
         }
     }
 
-    async actualizarUsuario(data: ActualizarUsuarioDTO): Promise<UsuarioResponseDTO> {
+    async actualizarUsuario(data: ActualizarUsuarioDTO): Promise<UsuarioResponseSimpleDTO> {
         try {
             const usuario = await Usuario.findByPk(data.id);
 
@@ -129,10 +148,6 @@ class UsuarioService {
                 nombre: data.nombre ?? usuario.nombre,
                 apellido: data.apellido ?? usuario.apellido,
                 telefono: data.telefono ?? usuario.telefono,
-                provincia: data.provincia ?? usuario.provincia,
-                localidad: data.localidad ?? usuario.localidad,
-                codigo_postal: data.codigo_postal ?? usuario.codigo_postal,
-                direccion: data.direccion ?? usuario.direccion,
             });
 
             return {
@@ -147,7 +162,7 @@ class UsuarioService {
         }
     }
 
-    async eliminarUsuario(id: number): Promise<{ mensaje: string, usuario: UsuarioResponseDTO }> {
+    async eliminarUsuario(id: number): Promise<{ mensaje: string, usuario: UsuarioResponseSimpleDTO }> {
         try {
             if (!id) {
                 throw new Error("el ID tiene un valor null")

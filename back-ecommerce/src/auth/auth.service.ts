@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import Usuario from "../models/usuario";
 import { LoginUsuarioDTO } from "../dto/auth/login-usuario.dto";
 import { LoginResponseDTO } from "../dto/auth/login-response.dto";
@@ -9,13 +8,9 @@ import { RefreshTokenPayload, validateRol } from "../types/jwt";
 import Rol from "../models/rol";
 import UnauthorizedError from "../custom-errors/http-errors/UnauthorizedError";
 import NotFountError from "../custom-errors/http-errors/NotFoundError";
+import { verifyToken } from "../utils/Token";
 
 class AuthService {
-
-    // ======================
-    // LOGIN
-    // ======================
-
 
     /**
      * The function `login` in TypeScript handles user authentication by verifying credentials,
@@ -82,9 +77,6 @@ class AuthService {
         };
     }
 
-    // ======================
-    // REFRESH TOKEN
-    // ======================
 
     /**
      * The `refresh` function in TypeScript verifies a refresh token, checks its validity, and
@@ -98,10 +90,7 @@ class AuthService {
      */
     async refresh(data: RefreshTokenDTO): Promise<{ accessToken: string, refreshToken: string }> {
 
-        const decoded = jwt.verify(
-            data.refreshToken,
-            process.env.JWT_SECRET!
-        ) as RefreshTokenPayload;
+        const decoded = verifyToken<RefreshTokenPayload>(data.refreshToken)
 
         if (decoded.type !== "refresh") {
             throw new UnauthorizedError("Token inválido");

@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../dbConection/conexion";
+import Rol from "./rol";
 
 interface UsuarioAttributes {
     id: number;
@@ -15,7 +16,7 @@ interface UsuarioAttributes {
     tokenValidAfter: Date;
 }
 
-type UsuarioCreationAttributes = Optional<UsuarioAttributes, "id" | "tokenValidAfter">;
+type UsuarioCreationAttributes = Optional<UsuarioAttributes, "id" | "tokenValidAfter" | "ultimoLogin" | "activo">;
 
 class Usuario extends Model<UsuarioAttributes, UsuarioCreationAttributes>
     implements UsuarioAttributes {
@@ -30,6 +31,7 @@ class Usuario extends Model<UsuarioAttributes, UsuarioCreationAttributes>
     public activo!: boolean;
     public ultimoLogin!: Date;
     public tokenValidAfter!: Date;
+    public Rol?: Rol;
 
 }
 
@@ -40,10 +42,10 @@ Usuario.init(
         nombre: { type: DataTypes.STRING, allowNull: false },
         apellido: { type: DataTypes.STRING, allowNull: false },
         email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
-        dni:{type:DataTypes.INTEGER,allowNull:false,unique:true},
+        dni: { type: DataTypes.INTEGER, allowNull: false, unique: true },
         telefono: { type: DataTypes.STRING, allowNull: false, validate: { isNumeric: true } },
         password: { type: DataTypes.STRING, allowNull: false },
-        activo: { type: DataTypes.BOOLEAN, allowNull: false },
+        activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
         ultimoLogin: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
         tokenValidAfter: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     },

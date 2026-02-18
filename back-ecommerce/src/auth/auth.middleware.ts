@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 import { AccessTokenPayload } from "../types/jwt";
 import Usuario from "../models/usuario";
+import { verifyToken } from "../utils/Token";
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
@@ -17,7 +17,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AccessTokenPayload;
+        const decoded = verifyToken<AccessTokenPayload>(token)
 
         if (decoded.type !== "access") {
             return res.status(401).json({ message: "Token inválido" });

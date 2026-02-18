@@ -6,7 +6,7 @@ const ACCESS_EXPIRES = "15m";
 const REFRESH_EXPIRES = "7d";
 
 if (!JWT_SECRET || !ACCESS_EXPIRES || !REFRESH_EXPIRES) {
-    throw new Error("JWT environment variables are not set");
+    throw new Error("JWT environment variables no seteadas");
 }
 
 
