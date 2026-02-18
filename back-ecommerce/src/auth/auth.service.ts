@@ -1,14 +1,15 @@
-import Usuario from "../models/usuario";
 import { LoginUsuarioDTO } from "../dto/auth/login-usuario.dto";
 import { LoginResponseDTO } from "../dto/auth/login-response.dto";
 import { RefreshTokenDTO } from "../dto/auth/refresh-token.dto";
 import { comparePassword } from "../utils/password";
 import { generarAccessToken, generarRefreshToken } from "../utils/jwt";
 import { RefreshTokenPayload, validateRol } from "../types/jwt";
-import Rol from "../models/rol";
 import UnauthorizedError from "../custom-errors/http-errors/UnauthorizedError";
 import NotFountError from "../custom-errors/http-errors/NotFoundError";
 import { verifyToken } from "../utils/Token";
+import { hashToken } from "../utils/hashToken";
+import ServiceRefreshSession from "../service/refreshSessionService";
+import UsuarioService from "../service/usuarioService";
 
 class AuthService {
 
@@ -24,53 +25,64 @@ class AuthService {
      * - `accessToken`: A token generated for authentication purposes.
      * - `refreshToken`: A token generated for refreshing the access token.
      */
-    async login(data: LoginUsuarioDTO): Promise<LoginResponseDTO> {
+    async login(data: LoginUsuarioDTO, req: Request): Promise<LoginResponseDTO> {
 
-        const usuario = await Usuario.findOne({
-            where: { email: data.email },
-        });
+        const usuarioService = new UsuarioService();
 
-        if (!usuario) {
-            console.log("usuario", usuario)
+        const respuesta = await usuarioService.ObtenerUsuarioLogin({ email: data.email });
+
+        if (!respuesta) {
             throw new UnauthorizedError("Credenciales inválidas usuario o contraseña incorrecta incorrecta");
         }
 
         const passwordOk = await comparePassword(
             data.password,
-            usuario.password
+            respuesta.usuario.password
         );
 
-
         if (!passwordOk) {
-            console.log("passwordOk", passwordOk)
             throw new UnauthorizedError("Credenciales inválidas usuario o contraseña incorrecta incorrecta");
         }
 
-
-        const rol = await Rol.findOne({
-            where: { id: usuario.rolId }
-        })
+        const rol = respuesta.usuario.rol
 
         if (!rol) {
-            throw new NotFountError("Credenciales inválidas contraseña incorrecta");
+            throw new NotFountError("Credenciales inválidas");
         }
 
+
         const accessToken = generarAccessToken({
-            id: usuario.id,
-            email: usuario.email,
-            rol: validateRol(rol.nombre),
+            id: respuesta.usuario.id,
+            email: respuesta.usuario.email,
+            rol: validateRol(rol),
         });
 
         const refreshToken = generarRefreshToken({
-            id: usuario.id,
-            email: usuario.email,
+            id: respuesta.usuario.id,
+            email: respuesta.usuario.email,
+        });
+
+        const tokenHash = hashToken(refreshToken)
+
+        const serviceRefreshSession = new ServiceRefreshSession()
+
+        const forwarded = req.headers.get("x-forwarded-for");
+        const ipAddress = forwarded ? forwarded.split(',')[0] : "127.0.0.1";
+
+        await serviceRefreshSession.crear({
+            usuarioId: respuesta.usuario.id,
+            tokenHash,
+            fingerprint: req.headers.get("x-device-id") || "unknown",
+            deviceInfo: req.headers.get("user-agent") || "unknown",
+            ipAddress: ipAddress || "unknown",
+            userAgent: req.headers.get("user-agent") || "unknown",
         });
 
         return {
             user: {
-                id: usuario.id,
-                nombre: usuario.nombre,
-                email: usuario.email,
+                id: respuesta.usuario.id,
+                nombre: respuesta.usuario.nombre,
+                email: respuesta.usuario.email,
             },
             accessToken,
             refreshToken,
@@ -88,7 +100,7 @@ class AuthService {
      * @returns The `refresh` function returns a Promise that resolves to an object containing the
      * `accessToken` string.
      */
-    async refresh(data: RefreshTokenDTO): Promise<{ accessToken: string, refreshToken: string }> {
+    async refresh(data: RefreshTokenDTO, req: Request): Promise<{ accessToken: string, refreshToken: string }> {
 
         const decoded = verifyToken<RefreshTokenPayload>(data.refreshToken)
 
@@ -96,44 +108,79 @@ class AuthService {
             throw new UnauthorizedError("Token inválido");
         }
 
-        const usuario = await Usuario.findByPk(decoded.id);
-        if (!usuario) {
+        const tokenHash = hashToken(data.refreshToken)
+        const serviceRefreshSession = new ServiceRefreshSession();
+        const sesion = await serviceRefreshSession.findByTokenHash(tokenHash);
+
+        if (!sesion) {
+            throw new UnauthorizedError("Token inválido");
+        }
+
+        if (sesion.revoked) {
+            await serviceRefreshSession.revocarTodasLasSesiones(sesion.usuarioId);
+            throw new UnauthorizedError("Reuso de token detectado, sesiones revocadas");
+        }
+
+        if (new Date() > sesion.expiresAt) {
+            throw new UnauthorizedError("Token expirado");
+        }
+
+        const newFingerprint = req.headers.get("x-device-id") || "unknown"
+        if (newFingerprint !== sesion.fingerprint) {
+            throw new UnauthorizedError("sesion no valida")
+        }
+
+        const usuarioService = new UsuarioService();
+        const respuesta = await usuarioService.ObtenerUsuarioLogin({ email: decoded.email });
+
+        if (!respuesta) {
             throw new NotFountError("Usuario no existe");
         }
 
-        //! 🛑 Invalidación global 🛑
-        if (
-            decoded.iat &&
-            decoded.iat * 1000 <
-            new Date(usuario.tokenValidAfter).getTime()
-        ) {
-            throw new UnauthorizedError("Refresh token invalidado");
-        }
-
-        const rol = await Rol.findOne({
-            where: { id: usuario.rolId }
-        })
-
-        if (!rol) {
-            throw new NotFountError("Credenciales inválidas contraseña incorrecta");
-        }
-
-
         const accessToken = generarAccessToken({
-            id: usuario.id,
-            email: usuario.email,
-            rol: validateRol(rol.nombre)
+            id: respuesta.usuario.id,
+            email: respuesta.usuario.email,
+            rol: validateRol(respuesta.usuario.rol)
         });
 
         const refreshToken = generarRefreshToken({
-            id: usuario.id,
-            email: usuario.email,
+            id: respuesta.usuario.id,
+            email: respuesta.usuario.email,
+        });
+
+        const nuevoTokenHash = hashToken(refreshToken);
+
+        await serviceRefreshSession.revocarSesion(sesion.id, nuevoTokenHash);
+
+        const forwarded = req.headers.get("x-forwarded-for");
+        const ipAddress = forwarded ? forwarded.split(',')[0] : "127.0.0.1";
+
+        await serviceRefreshSession.crear({
+            usuarioId: respuesta.usuario.id,
+            tokenHash: nuevoTokenHash,
+            fingerprint: req.headers.get("x-device-id") || "unknown",
+            deviceInfo: req.headers.get("user-agent") || "unknown",
+            ipAddress: ipAddress || "unknown",
+            userAgent: req.headers.get("user-agent") || "unknown",
         });
 
         return {
             accessToken,
             refreshToken
         };
+    }
+
+    // cierra la de un solo dispositivo
+    async logout(refreshToken: string): Promise<void> {
+        const tokenHash = hashToken(refreshToken)
+        const serviceRefreshSession = new ServiceRefreshSession();
+        await serviceRefreshSession.revocarSesionDeUnDispositivo(tokenHash);
+    }
+
+    // cierra todas las sesiones abiertas
+    async logoutAll(usuarioId: number): Promise<void> {
+        const serviceRefreshSession = new ServiceRefreshSession();
+        await serviceRefreshSession.revocarTodasLasSesiones(usuarioId);
     }
 }
 

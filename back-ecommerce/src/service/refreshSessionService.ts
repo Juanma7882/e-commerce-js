@@ -3,7 +3,7 @@ import RefreshSession from "../models/refreshSession";
 
 class ServiceRefreshSession {
 
-    async create(data: crearRefreshSessionAttributesDTO) {
+    async crear(data: crearRefreshSessionAttributesDTO) {
         try {
             await RefreshSession.create({
                 usuarioId: data.usuarioId,
@@ -18,6 +18,33 @@ class ServiceRefreshSession {
         catch {
             throw new Error("Error al crear el refresh Session: ");
         }
+    }
+
+    async findByTokenHash(tokenHash: string) {
+        return await RefreshSession.findOne({ where: { tokenHash } });
+    }
+
+    async revocarSesion(id: number, replacedByToken?: string) {
+        await RefreshSession.update({
+            revoked: true,
+            revokedAt: new Date(),
+            replacedByToken: replacedByToken
+        }, { where: { id } });
+    }
+
+    async revocarSesionDeUnDispositivo(tokenHash: string) {
+        await RefreshSession.update({
+            revoked: true,
+            revokedAt: new Date()
+        }, { where: { tokenHash } });
+    }
+
+
+    async revocarTodasLasSesiones(usuarioId: number) {
+        await RefreshSession.update({
+            revoked: true,
+            revokedAt: new Date()
+        }, { where: { usuarioId, revoked: false } });
     }
 }
 

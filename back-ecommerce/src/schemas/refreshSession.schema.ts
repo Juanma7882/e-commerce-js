@@ -8,6 +8,5 @@ export const crearRefreshSessionAttributes = z.object({
     deviceInfo: z.string(),
     ipAddress: z.string(),
     userAgent: z.string(),
-    expiresAt: z.date(),
 })
 

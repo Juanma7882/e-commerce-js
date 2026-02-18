@@ -8,6 +8,7 @@ import { ListarUsuariosDTO } from "../dto/usuario/listar-usuarios.dto";
 import { ActualizarUsuarioDTO } from "../dto/usuario/actualizar-usuario.dto"
 import Rol from "../models/rol";
 import { UsuarioResponseSimpleDTO } from "../dto/usuario/usuario-response-simple";
+import { UsuarioConCredencialesDTO } from "../dto/usuario/usuario-con-credenciales.dto";
 
 class UsuarioService {
     async crearUsuarioDTO(data: CrearUsuarioDTO): Promise<UsuarioResponseDTO> {
@@ -87,6 +88,46 @@ class UsuarioService {
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             throw new Error("Error al crear el usuario: " + message);
+        }
+    }
+
+    async ObtenerUsuarioLogin(filtro: ObtenerUsuarioPorDTO): Promise<{ mensaje: string, usuario: UsuarioConCredencialesDTO }> {
+        try {
+            if (!filtro.id && !filtro.email) {
+                throw new Error("Debe proporcionar id o email");
+            }
+            const usuario = await Usuario.findOne({
+                where: {
+                    ...(filtro.id && { id: filtro.id }),
+                    ...(filtro.email && { email: filtro.email }),
+                },
+                include: [
+                    {
+                        model: Rol,
+                        attributes: ["id", "nombre", "descripcion"]
+                    }
+                ]
+            });
+
+            if (!usuario) {
+                throw new Error("usuario no encontrado");
+            }
+
+            return {
+                mensaje: "usuario encontrado",
+                usuario: {
+                    id: usuario.id,
+                    nombre: usuario.nombre,
+                    apellido: usuario.apellido,
+                    email: usuario.email,
+                    rol: usuario.Rol?.nombre ?? "unknown",
+                    password: usuario.password,
+                    tokenValidAfter: usuario.tokenValidAfter
+                },
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error("Error al obtener usuario: " + message);
         }
     }
 
